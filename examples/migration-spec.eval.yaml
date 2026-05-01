@@ -1,0 +1,23 @@
+evalSpecVersion: "0.1"
+name: "Migration Regression Suite"
+model:
+  provider: anthropic
+  model: claude-sonnet-4-6
+  maxTokens: 200
+  systemPrompt: "You are a helpful assistant. Be concise."
+  temperature: 0
+defaultGrading:
+  mode: exact-match
+  trimWhitespace: true
+cases:
+  - id: math-basic
+    name: "Basic arithmetic"
+    input: "What is 15 + 27? Reply with just the number."
+    expected: "42"
+  - id: capital
+    name: "Geography knowledge"
+    input: "What is the capital of Japan? Reply with just the city name."
+    expected: "Tokyo"
+  - id: coding
+    name: "Simple code"
+    input: "Write a Python function that returns the sum of two numbers. Only output the function, nothing else."
