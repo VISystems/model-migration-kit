@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { compareRuns } from '../../src/comparator/comparator.js';
 import type { ModelRunResult } from '../../src/runner/types.js';
 
-function makeRun(model: string, cases: Array<{ id: string; pass: boolean; output: string; durationMs: number; tokens: { input: number; output: number } }>): ModelRunResult {
+function makeRun(model: string, cases: Array<{ id: string; pass: boolean; output: string; durationMs: number; tokens: { input: number; output: number } }>, provider = 'anthropic'): ModelRunResult {
   return {
-    model, specName: 'Test Suite',
+    model, provider, specName: 'Test Suite',
     cases: cases.map((c) => ({ caseId: c.id, input: 'q', output: c.output, pass: c.pass, reason: c.pass ? 'OK' : 'FAIL', durationMs: c.durationMs, tokens: c.tokens })),
     totalPassed: cases.filter((c) => c.pass).length,
     totalFailed: cases.filter((c) => !c.pass).length,
@@ -65,5 +65,23 @@ describe('compareRuns', () => {
     const nw = makeRun('new', [{ id: 'c1', pass: true, output: 'a', durationMs: 100, tokens: { input: 150, output: 75 } }]);
     const report = compareRuns(old, nw);
     expect(report.summary.costDeltaPercent).toBeGreaterThan(0);
+  });
+
+  it('populates provider fields in report', () => {
+    const cases = [{ id: 'c1', pass: true, output: 'a', durationMs: 100, tokens: { input: 10, output: 5 } }];
+    const report = compareRuns(makeRun('old-model', cases, 'anthropic'), makeRun('new-model', cases, 'anthropic'));
+    expect(report.oldProvider).toBe('anthropic');
+    expect(report.newProvider).toBe('anthropic');
+  });
+
+  it('supports cross-provider comparison', () => {
+    const oldCases = [{ id: 'c1', pass: true, output: 'claude answer', durationMs: 120, tokens: { input: 15, output: 8 } }];
+    const newCases = [{ id: 'c1', pass: true, output: 'gpt answer', durationMs: 100, tokens: { input: 12, output: 6 } }];
+    const report = compareRuns(makeRun('claude-sonnet-4-5', oldCases, 'anthropic'), makeRun('gpt-4o', newCases, 'openai'));
+    expect(report.oldProvider).toBe('anthropic');
+    expect(report.newProvider).toBe('openai');
+    expect(report.oldModel).toBe('claude-sonnet-4-5');
+    expect(report.newModel).toBe('gpt-4o');
+    expect(report.caseDeltas[0]!.behaviorChange).toBe('output-changed');
   });
 });

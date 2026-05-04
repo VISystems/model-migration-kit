@@ -12,6 +12,7 @@ export interface EvalCaseResult {
 
 export interface ModelRunResult {
   model: string;
+  provider: string;
   specName: string;
   cases: EvalCaseResult[];
   totalPassed: number;

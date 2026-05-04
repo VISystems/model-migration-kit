@@ -15,6 +15,8 @@ export interface MigrationReport {
   specName: string;
   oldModel: string;
   newModel: string;
+  oldProvider: string;
+  newProvider: string;
   timestamp: string;
   summary: {
     totalCases: number;

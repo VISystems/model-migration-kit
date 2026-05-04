@@ -1,7 +1,7 @@
 {
   "name": "@visystems/model-migration-kit",
-  "version": "0.1.0",
-  "description": "Automate Claude model version migrations with eval-based regression analysis",
+  "version": "0.2.0",
+  "description": "Compare AI model behavior across versions and providers",
   "license": "Apache-2.0",
   "type": "module",
   "bin": { "model-migration-kit": "./dist/cli.mjs" },
@@ -12,7 +12,7 @@
   "engines": { "node": ">=22.0.0" },
   "scripts": { "build": "tsup", "typecheck": "tsc --noEmit", "test": "vitest run" },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0",
+    "@visystems/eval-runner": "file:../claude-eval-runner",
     "citty": "^0.2.2",
     "yaml": "^2.7.0",
     "zod": "^3.24.0"

@@ -9,29 +9,29 @@ import type { MigrationThresholds } from './comparator/types.js';
 import { DEFAULT_THRESHOLDS } from './comparator/types.js';
 
 const compare = defineCommand({
-  meta: { description: 'Compare eval results between two Claude model versions' },
+  meta: { description: 'Compare eval results between two models (any provider)' },
   args: {
     specFile: { type: 'positional', description: 'Path to eval spec (.yaml)', required: true },
     oldModel: { type: 'string', description: 'Old model ID', required: true },
     newModel: { type: 'string', description: 'New model ID', required: true },
+    oldProvider: { type: 'string', description: 'Provider for old model (anthropic, openai, google, bedrock, azure)', default: 'anthropic' },
+    newProvider: { type: 'string', description: 'Provider for new model (defaults to --old-provider)' },
     format: { type: 'string', description: 'Output format: table, json, markdown', default: 'table' },
     maxLatency: { type: 'string', description: 'Max latency increase % threshold', default: '15' },
     maxCost: { type: 'string', description: 'Max cost increase % threshold', default: '20' },
   },
   async run({ args }) {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      process.stderr.write('Error: ANTHROPIC_API_KEY environment variable is required\n');
-      process.exit(2);
-    }
-
     const raw = await readFile(args.specFile, 'utf-8');
     const spec = parseYaml(raw) as EvalSpec;
 
-    process.stderr.write(`Running eval against ${args.oldModel}...\n`);
-    const oldResult = await runAgainstModel(spec, args.oldModel, process.env.ANTHROPIC_API_KEY);
+    const oldProvider = args.oldProvider;
+    const newProvider = args.newProvider ?? oldProvider;
 
-    process.stderr.write(`Running eval against ${args.newModel}...\n`);
-    const newResult = await runAgainstModel(spec, args.newModel, process.env.ANTHROPIC_API_KEY);
+    process.stderr.write(`Running eval against ${oldProvider}/${args.oldModel}...\n`);
+    const oldResult = await runAgainstModel(spec, oldProvider, args.oldModel);
+
+    process.stderr.write(`Running eval against ${newProvider}/${args.newModel}...\n`);
+    const newResult = await runAgainstModel(spec, newProvider, args.newModel);
 
     const thresholds: MigrationThresholds = {
       ...DEFAULT_THRESHOLDS,
@@ -62,7 +62,7 @@ const offline = defineCommand({
 });
 
 const main = defineCommand({
-  meta: { name: 'model-migration-kit', version: '0.1.0', description: 'Automate Claude model version migrations with eval-based regression analysis' },
+  meta: { name: 'model-migration-kit', version: '0.2.0', description: 'Compare AI model behavior across versions and providers' },
   subCommands: { compare, offline },
 });
 

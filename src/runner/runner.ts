@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@visystems/eval-runner/client';
 import type { ModelRunResult, EvalCaseResult } from './types.js';
 
 export interface EvalSpec {
@@ -10,28 +10,25 @@ export interface EvalSpec {
 
 export async function runAgainstModel(
   spec: EvalSpec,
+  provider: string,
   model: string,
-  apiKey: string,
 ): Promise<ModelRunResult> {
-  const sdk = new Anthropic({ apiKey });
+  const client = createClient(provider);
   const cases: EvalCaseResult[] = [];
   const startTime = Date.now();
 
   for (const c of spec.cases) {
     const caseStart = Date.now();
     try {
-      const response = await sdk.messages.create({
+      const response = await client.chat({
         model,
-        max_tokens: spec.model.maxTokens,
-        ...(spec.model.systemPrompt ? { system: spec.model.systemPrompt } : {}),
+        maxTokens: spec.model.maxTokens,
+        ...(spec.model.systemPrompt ? { systemPrompt: spec.model.systemPrompt } : {}),
         ...(spec.model.temperature !== undefined ? { temperature: spec.model.temperature } : {}),
         messages: [{ role: 'user', content: c.input }],
       });
 
-      const text = response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-        .map((b) => b.text)
-        .join('');
+      const text = response.content;
 
       let pass = true;
       let reason = 'Output captured';
@@ -43,7 +40,7 @@ export async function runAgainstModel(
       cases.push({
         caseId: c.id, caseName: c.name, input: c.input, output: text,
         pass, reason, durationMs: Date.now() - caseStart,
-        tokens: { input: response.usage.input_tokens, output: response.usage.output_tokens },
+        tokens: { input: response.tokens.input, output: response.tokens.output },
       });
     } catch (err) {
       cases.push({
@@ -59,7 +56,7 @@ export async function runAgainstModel(
   const errored = cases.filter((c) => c.error).length;
 
   return {
-    model, specName: spec.name, cases,
+    model, provider, specName: spec.name, cases,
     totalPassed: passed, totalFailed: cases.length - passed - errored,
     totalErrored: errored, totalCases: cases.length,
     durationMs: Date.now() - startTime,

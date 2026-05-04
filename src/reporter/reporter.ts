@@ -20,7 +20,7 @@ function formatTable(r: MigrationReport): string {
   const icon = r.thresholds.passed ? green('PASS') : red('FAIL');
 
   lines.push(bold(`Migration Report: ${r.specName}`));
-  lines.push(`${r.oldModel} → ${r.newModel}  ${icon}`);
+  lines.push(`Old: ${r.oldProvider}/${r.oldModel}  →  New: ${r.newProvider}/${r.newModel}  ${icon}`);
   lines.push(dim('─'.repeat(70)));
 
   lines.push(bold('Summary'));
@@ -62,7 +62,7 @@ function formatMarkdown(r: MigrationReport): string {
   const lines: string[] = [];
 
   lines.push(`# Migration Report: ${r.specName} ${icon}`);
-  lines.push(`**${r.oldModel}** → **${r.newModel}**`);
+  lines.push(`**${r.oldProvider}/${r.oldModel}** → **${r.newProvider}/${r.newModel}**`);
   lines.push('');
   lines.push('## Summary');
   lines.push(`| Metric | Value |`);

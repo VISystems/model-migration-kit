@@ -55,6 +55,7 @@ export function compareRuns(
 
   return {
     specName: oldRun.specName, oldModel: oldRun.model, newModel: newRun.model,
+    oldProvider: oldRun.provider, newProvider: newRun.provider,
     timestamp: new Date().toISOString(),
     summary: {
       totalCases: caseDeltas.length, regressions, improvements, unchanged,
